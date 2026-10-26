@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فن الخطبة المنبرية | Modul Interaktif Canggih</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;500;700&family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons (Premium Modern Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        arabicHeading: ['Cairo', 'sans-serif'],
+                        arabicText: ['Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        deep: {
+                            base: '#030712', // Ultra dark blue/black
+                            panel: '#0f172a',
+                            border: '#1e293b'
+                        },
+                        neon: {
+                            cyan: '#00f2fe',
+                            magenta: '#ff0844',
+                            gold: '#fbbf24',
+                            purple: '#a855f7'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 8s linear infinite',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%': { boxShadow: '0 0 15px 0 rgba(0, 242, 254, 0.4)' },
+                            '100%': { boxShadow: '0 0 30px 10px rgba(0, 242, 254, 0.1)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: 0, transform: 'translateY(30px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #030712;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Canvas Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Premium Glass Panel */
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(3, 7, 18, 0.8) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 254, 0.3), transparent);
+        }
+
+        /* Text Gradients */
+        .text-gradient-cyan {
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .text-gradient-gold {
+            background: linear-gradient(to right, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+        .accordion-content.open {
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .accordion-icon {
+            transition: transform 0.4s ease;
+        }
+        .accordion-icon.open {
+            transform: rotate(180deg);
+        }
+        
+        .tab-btn {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 50%;
+            width: 0; height: 3px;
+            background: #00f2fe;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #00f2fe;
+        }
+        .tab-btn.active {
+            color: #00f2fe;
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+        }
+        .tab-btn.active::after {
+            width: 80%;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f2fe; }
+
+        /* Teleprompter specific */
+        #teleprompter-container {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+
+        /* Slot Machine Effect */
+        .slot-machine-blur {
+            filter: blur(4px);
+            opacity: 0.7;
+            transform: translateY(10px);
+        }
+        
+        /* Progress Circle */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-arabicText text-lg pb-20">
+
+    <!-- Credit Badge -->
+    <div class="absolute top-4 left-4 z-50 bg-deep-panel/80 backdrop-blur-md border border-neon-gold/30 px-4 py-2 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.2)] flex items-center gap-2 animate-slide-up">
+        <i class="ph-fill ph-graduation-cap text-neon-gold text-2xl"></i>
+        <span class="text-gray-200 font-arabicText font-bold text-sm tracking-wide">بإشراف / Credit to: <span class="text-neon-gold">Dr. Mohd Taufiq bin Abd Talib, UniSZA</span></span>
+    </div>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Header Section -->
+    <header class="max-w-7xl mx-auto pt-24 pb-12 px-6 text-center relative animate-slide-up">
+        <div class="inline-flex items-center justify-center p-4 rounded-full bg-deep-panel/50 border border-white/10 mb-6 shadow-[0_0_30px_rgba(0,242,254,0.15)] backdrop-blur-md">
+            <i class="ph-fill ph-mosque text-4xl text-neon-cyan animate-pulse"></i>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-black font-arabicHeading text-white mb-4 tracking-tight drop-shadow-2xl">
+            المنصة التفاعلية: <span class="text-gradient-cyan">فن الخطبة المنبرية</span>
+        </h1>
+        <p class="text-gray-400 text-xl md:text-2xl max-w-3xl mx-auto font-arabicText bg-deep-border/30 p-4 rounded-2xl border border-white/5">
+            تجربة رقمية متقدمة لتعلم وإتقان مهارات إعداد وإلقاء الخطب لطلاب المرحلة الجامعية
+        </p>
+    </header>
+
+    <nav class="max-w-md mx-auto mb-16 bg-deep-panel/80 p-2 rounded-full border border-white/10 backdrop-blur-xl flex relative z-10 animate-slide-up" style="animation-delay: 0.1s;">
+        <button onclick="switchTab('teori')" id="btn-teori" class="tab-btn active flex-1 py-3 px-6 rounded-full font-bold font-arabicHeading text-xl flex items-center justify-center gap-2 text-gray-300 hover:text-white">
+            <i class="ph-bold ph-book-open-text text-2xl"></i>
+            المذكرة الأكاديمية
+        </button>
+        <button onclick="switchTab('praktikal')" id="btn-praktikal" class="tab-btn flex-1 py-3 px-6 rounded-full font-bold font-arabicHeading text-xl flex items-center justify-center gap-2 text-gray-300 hover:text-white">
+            <i class="ph-bold ph-game-controller text-2xl"></i>
+            المختبر التفاعلي
+        </button>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        
+        <!-- ========================================== -->
+        <!-- SECTION 1: TEORI (Muzakkirah Ilmiyyah) -->
+        <!-- ========================================== -->
+        <section id="sec-teori" class="block animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="space-y-6">
+                
+                <!-- Topic 1 -->
+                <div class="glass-panel group">
+                    <button class="w-full flex justify-between items-center p-6 md:p-8 hover:bg-white/5 transition-colors" onclick="toggleAccordion('acc1')">
+                        <div class="flex items-center gap-4 md:gap-6">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-cyan-500/30 flex items-center justify-center group-hover:shadow-[0_0_20px_rgba(0,242,254,0.3)] transition-all">
+                                <i class="ph-duotone ph-book-bookmark text-3xl text-neon-cyan"></i>
+                            </div>
+                            <span class="font-black text-2xl md:text-3xl text-white font-arabicHeading text-right">المبحث الأول: مفهوم الخطبة ومكانتها</span>
+                        </div>
+                        <i id="icon-acc1" class="ph-bold ph-caret-down text-2xl text-gray-400 accordion-icon"></i>
+                    </button>
+                    <div id="acc1" class="accordion-content px-6 md:px-24 pb-8 border-t border-white/5">
+                        <div class="mt-6 space-y-6 text-gray-300 text-xl leading-relaxed">
+                            <p><strong class="text-neon-cyan">التعريف الاصطلاحي:</strong> الخطبة هي فنّ مشافهة الجمهور، وإقناعه، واستمالته، والتأثير عليه عبر أساليب تعبيرية محددة. وهي كلام مؤلف يتضمن وعظاً وإرشاداً، يُلقى على جمع من الناس.</p>
+                            
+                            <h4 class="font-bold text-white text-2xl mt-4 border-r-4 border-neon-cyan pr-4">أهمية ومكانة الخطبة:</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div class="bg-deep-border/30 p-5 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-colors">
+                                    <h5 class="font-bold text-neon-cyan mb-2 flex items-center gap-2"><i class="ph-fill ph-users-three"></i> التواصل الجماهيري</h5>
+                                    <p class="text-lg">وسيلة فعّالة وشرعية للتواصل المباشر مع الأمة وتوجيهها أسبوعياً.</p>
+                                </div>
+                                <div class="bg-deep-border/30 p-5 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-colors">
+                                    <h5 class="font-bold text-neon-cyan mb-2 flex items-center gap-2"><i class="ph-fill ph-brain"></i> بناء الثقة والتفكير</h5>
+                                    <p class="text-lg">تساعد في تنمية الثقة بالنفس وتعزز من مهارات التفكير المنطقي والإقناع.</p>
+                                </div>
+                                <div class="bg-deep-border/30 p-5 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-colors">
+                                    <h5 class="font-bold text-neon-cyan mb-2 flex items-center gap-2"><i class="ph-fill ph-globe-hemisphere-east"></i> التأثير في الرأي العام</h5>
+                                    <p class="text-lg">تُمكّن الخطيب من تصحيح المفاهيم الخاطئة والتأثير في السلوك والمواقف.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic 2 -->
+                <div class="glass-panel group">
+                    <button class="w-full flex justify-between items-center p-6 md:p-8 hover:bg-white/5 transition-colors" onclick="toggleAccordion('acc2')">
+                        <div class="flex items-center gap-4 md:gap-6">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center group-hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all">
+                                <i class="ph-duotone ph-list-dashes text-3xl text-neon-gold"></i>
+                            </div>
+                            <span class="font-black text-2xl md:text-3xl text-white font-arabicHeading text-right">المبحث الثاني: أنواع الخطابة</span>
+                        </div>
+                        <i id="icon-acc2" class="ph-bold ph-caret-down text-2xl text-gray-400 accordion-icon"></i>
+                    </button>
+                    <div id="acc2" class="accordion-content px-6 md:px-24 pb-8 border-t border-white/5">
+                        <div class="mt-8 relative space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-deep-base/50 p-6 rounded-2xl border border-white/5">
+                                    <h5 class="text-neon-gold font-bold text-xl mb-3 flex items-center gap-2"><i class="ph-fill ph-mosque text-2xl"></i> ١. الخطبة الدينية</h5>
+                                    <p class="text-gray-300 text-lg">هي ما يُلقى في صلاة الجمعة، والأعياد، ومواسم الحج، والاستسقاء. وهي الأعظم أثراً لارتباطها بالشعائر التعبدية.</p>
+                                </div>
+                                <div class="bg-deep-base/50 p-6 rounded-2xl border border-white/5">
+                                    <h5 class="text-neon-gold font-bold text-xl mb-3 flex items-center gap-2"><i class="ph-fill ph-bank text-2xl"></i> ٢. الخطبة السياسية</h5>
+                                    <p class="text-gray-300 text-lg">تتناول شؤون السياسة الداخلية والخارجية للدولة، أو تُلقى في المؤتمرات والبرلمانات لتوجيه الرأي العام.</p>
+                                </div>
+                                <div class="bg-deep-base/50 p-6 rounded-2xl border border-white/5">
+                                    <h5 class="text-neon-gold font-bold text-xl mb-3 flex items-center gap-2"><i class="ph-fill ph-shield-check text-2xl"></i> ٣. الخطبة الحربية</h5>
+                                    <p class="text-gray-300 text-lg">تُلقى أمام الجنود في ساحات المعارك أو المعسكرات لتحفيزهم، ورفع معنوياتهم، وبث روح الشجاعة.</p>
+                                </div>
+                                <div class="bg-deep-base/50 p-6 rounded-2xl border border-white/5">
+                                    <h5 class="text-neon-gold font-bold text-xl mb-3 flex items-center gap-2"><i class="ph-fill ph-users text-2xl"></i> ٤. الخطبة المحفلية (العامة)</h5>
+                                    <p class="text-gray-300 text-lg">تُلقى في المناسبات الاجتماعية، والمدرسية والجامعية، وحفلات الزواج، وتكريم الشخصيات.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic 3 -->
+                <div class="glass-panel group">
+                    <button class="w-full flex justify-between items-center p-6 md:p-8 hover:bg-white/5 transition-colors" onclick="toggleAccordion('acc3')">
+                        <div class="flex items-center gap-4 md:gap-6">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all">
+                                <i class="ph-duotone ph-columns text-3xl text-neon-purple"></i>
+                            </div>
+                            <span class="font-black text-2xl md:text-3xl text-white font-arabicHeading text-right">المبحث الثالث: أركان الخطبة وعناصرها</span>
+                        </div>
+                        <i id="icon-acc3" class="ph-bold ph-caret-down text-2xl text-gray-400 accordion-icon"></i>
+                    </button>
+                    <div id="acc3" class="accordion-content px-6 md:px-24 pb-8 border-t border-white/5">
+                        <div class="mt-6 text-gray-300 text-xl leading-relaxed space-y-8">
+                            
+                            <div>
+                                <h4 class="font-bold text-neon-purple text-2xl border-r-4 border-neon-purple pr-4 mb-4">أولاً: أركان خطبة الجمعة (الشرعية)</h4>
+                                <div class="flex flex-wrap gap-3">
+                                    <span class="bg-purple-900/40 text-purple-200 px-4 py-2 rounded-lg border border-purple-500/30">١. حمد الله تعالى</span>
+                                    <span class="bg-purple-900/40 text-purple-200 px-4 py-2 rounded-lg border border-purple-500/30">٢. الصلاة على النبي ﷺ</span>
+                                    <span class="bg-purple-900/40 text-purple-200 px-4 py-2 rounded-lg border border-purple-500/30">٣. الوصية بتقوى الله</span>
+                                    <span class="bg-purple-900/40 text-purple-200 px-4 py-2 rounded-lg border border-purple-500/30">٤. قراءة آية من القرآن</span>
+                                    <span class="bg-purple-900/40 text-purple-200 px-4 py-2 rounded-lg border border-purple-500/30">٥. الدعاء للمؤمنين (في الثانية)</span>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-white/10 pt-6">
+                                <h4 class="font-bold text-neon-purple text-2xl border-r-4 border-neon-purple pr-4 mb-4">ثانياً: العناصر البنائية للخطبة</h4>
+                                <ul class="list-none space-y-4 pr-4">
+                                    <li class="relative pr-6 before:content-[''] before:absolute before:right-0 before:top-3 before:w-2 before:h-2 before:bg-neon-purple before:rounded-full">
+                                        <strong class="text-white">المقدمة:</strong> استهلال يجذب انتباه المستمعين، وتحتوي على آية أو حكمة أو سؤال، وتمهيد لموضوع الخطبة.
+                                    </li>
+                                    <li class="relative pr-6 before:content-[''] before:absolute before:right-0 before:top-3 before:w-2 before:h-2 before:bg-neon-purple before:rounded-full">
+                                        <strong class="text-white">العرض (المتن):</strong> طرح الأفكار بشكل منطقي ومتسلسل، استخدام الحجج والأمثلة والاقتباسات، وربط الأفكار بسياق المستمعين (فقه الواقع).
+                                    </li>
+                                    <li class="relative pr-6 before:content-[''] before:absolute before:right-0 before:top-3 before:w-2 before:h-2 before:bg-neon-purple before:rounded-full">
+                                        <strong class="text-white">الخاتمة:</strong> تلخيص النقاط المهمة، الدعوة للتأمل أو العمل، واستخدام عبارة ختامية قوية.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic 4 -->
+                <div class="glass-panel group">
+                    <button class="w-full flex justify-between items-center p-6 md:p-8 hover:bg-white/5 transition-colors" onclick="toggleAccordion('acc4')">
+                        <div class="flex items-center gap-4 md:gap-6">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 flex items-center justify-center group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all">
+                                <i class="ph-duotone ph-user-focus text-3xl text-emerald-400"></i>
+                            </div>
+                            <span class="font-black text-2xl md:text-3xl text-white font-arabicHeading text-right">المبحث الرابع: شروط الخطيب الناجح وخصائص خطبته</span>
+                        </div>
+                        <i id="icon-acc4" class="ph-bold ph-caret-down text-2xl text-gray-400 accordion-icon"></i>
+                    </button>
+                    <div id="acc4" class="accordion-content px-6 md:px-24 pb-8 border-t border-white/5">
+                        <div class="mt-6 text-gray-300 text-xl space-y-8">
+                            
+                            <div>
+                                <h4 class="font-bold text-emerald-400 text-2xl border-r-4 border-emerald-400 pr-4 mb-4">شروط وصفات الخطيب الناجح</h4>
+                                <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <li class="bg-deep-base/50 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                                        <i class="ph-fill ph-check-circle text-emerald-400"></i> سلامة اللغة وحسن النطق
+                                    </li>
+                                    <li class="bg-deep-base/50 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                                        <i class="ph-fill ph-check-circle text-emerald-400"></i> وضوح الصوت ونبرته المؤثرة
+                                    </li>
+                                    <li class="bg-deep-base/50 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                                        <i class="ph-fill ph-check-circle text-emerald-400"></i> القدرة على الإقناع والتأثير
+                                    </li>
+                                    <li class="bg-deep-base/50 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                                        <i class="ph-fill ph-check-circle text-emerald-400"></i> التفاعل مع الجمهور بالعين والجسد
+                                    </li>
+                                    <li class="bg-deep-base/50 p-3 rounded-lg border border-white/5 flex items-center gap-3 md:col-span-2">
+                                        <i class="ph-fill ph-check-circle text-emerald-400"></i> فقه الواقع (مراعاة الزمان والمكان والسياق)
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="border-t border-white/10 pt-6">
+                                <h4 class="font-bold text-emerald-400 text-2xl border-r-4 border-emerald-400 pr-4 mb-4">خصائص الخطبة الجيدة</h4>
+                                <ul class="list-disc list-inside text-lg space-y-2 pr-4 text-gray-300">
+                                    <li>الاتساق والوضوح في الأفكار.</li>
+                                    <li>التركيز على الفكرة الرئيسية وعدم التشتت.</li>
+                                    <li>الحيادية والبعد عن التحيّز والأهواء.</li>
+                                    <li>استخدام الأدلة الشرعية (القرآن والحديث) والأدلة العقلية.</li>
+                                    <li>عدم الإطالة أو الحشو (فإن قصر الخطبة مَئِنَّةٌ من فقه الرجل).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic 5 -->
+                <div class="glass-panel group">
+                    <button class="w-full flex justify-between items-center p-6 md:p-8 hover:bg-white/5 transition-colors" onclick="toggleAccordion('acc5')">
+                        <div class="flex items-center gap-4 md:gap-6">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500/20 to-rose-500/20 border border-red-500/30 flex items-center justify-center group-hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all">
+                                <i class="ph-duotone ph-list-numbers text-3xl text-rose-400"></i>
+                            </div>
+                            <span class="font-black text-2xl md:text-3xl text-white font-arabicHeading text-right">المبحث الخامس: خطوات إعداد الخطبة</span>
+                        </div>
+                        <i id="icon-acc5" class="ph-bold ph-caret-down text-2xl text-gray-400 accordion-icon"></i>
+                    </button>
+                    <div id="acc5" class="accordion-content px-6 md:px-24 pb-8 border-t border-white/5">
+                        <div class="mt-6 text-gray-300 text-xl leading-relaxed">
+                            <p class="mb-6">التنظيم المسبق هو مفتاح الخطبة الناجحة التي تلامس القلوب، وتتمثل في الخطوات التالية:</p>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-deep-base/50 p-4 rounded-xl border border-white/5 flex gap-4 items-start">
+                                    <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold shrink-0 mt-1">1</div>
+                                    <div>
+                                        <strong class="text-white block">تحديد الموضوع:</strong> اختيار موضوع يعالج مشكلة واقعية أو حاجة ملحة لدى المجتمع.
+                                    </div>
+                                </div>
+                                <div class="bg-deep-base/50 p-4 rounded-xl border border-white/5 flex gap-4 items-start">
+                                    <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold shrink-0 mt-1">2</div>
+                                    <div>
+                                        <strong class="text-white block">جمع المعلومات:</strong> استخراج الآيات، الأحاديث الصحيحة، القصص المؤثرة، والإحصائيات الحديثة.
+                                    </div>
+                                </div>
+                                <div class="bg-deep-base/50 p-4 rounded-xl border border-white/5 flex gap-4 items-start">
+                                    <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold shrink-0 mt-1">3</div>
+                                    <div>
+                                        <strong class="text-white block">تنظيم الأفكار:</strong> ترتيب المادة العلمية وفق تسلسل منطقي يربط المقدمة بالمتن والخاتمة.
+                                    </div>
+                                </div>
+                                <div class="bg-deep-base/50 p-4 rounded-xl border border-white/5 flex gap-4 items-start">
+                                    <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold shrink-0 mt-1">4</div>
+                                    <div>
+                                        <strong class="text-white block">كتابة المسودة:</strong> صياغة الخطبة بلغة فصيحة وسهلة، وتجنب التعقيد اللفظي.
+                                    </div>
+                                </div>
+                                <div class="bg-deep-base/50 p-4 rounded-xl border border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.1)] flex gap-4 items-start">
+                                    <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold shrink-0 mt-1">5</div>
+                                    <div>
+                                        <strong class="text-rose-400 block">المراجعة والتدريب:</strong> التدرب الصوتي (بروفة) لضبط الوقت، وضبط مخارج الحروف، والتلوين الصوتي.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: PRAKTIKAL (Widgets Interaktif)  -->
+        <!-- ========================================== -->
+        <section id="sec-praktikal" class="hidden">
+            
+            <!-- APP 1: Smart Teleprompter -->
+            <div class="glass-panel p-6 md:p-10 mb-10">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/10 pb-6">
+                    <div>
+                        <h3 class="text-3xl font-black text-white font-arabicHeading flex items-center gap-3">
+                            <i class="ph-fill ph-monitor-play text-neon-cyan"></i> جهاز الملقن الآلي (Teleprompter)
+                        </h3>
+                        <p class="text-gray-400 mt-2">تدرب على القراءة المنطلقة وضبط طبقات الصوت أثناء الإلقاء.</p>
+                    </div>
+                    
+                    <!-- Teleprompter Controls -->
+                    <div class="flex flex-wrap gap-3 bg-deep-base/80 p-3 rounded-2xl border border-white/10">
+                        <button onclick="changeFontSize(1)" class="p-2 hover:bg-white/10 rounded-lg text-white" title="تكبير الخط"><i class="ph-bold ph-text-a-up text-xl"></i></button>
+                        <button onclick="changeFontSize(-1)" class="p-2 hover:bg-white/10 rounded-lg text-white" title="تصغير الخط"><i class="ph-bold ph-text-a-down text-xl"></i></button>
+                        <div class="w-px h-8 bg-white/20 mx-1"></div>
+                        <button onclick="changeSpeed(-1)" class="p-2 hover:bg-white/10 rounded-lg text-white" title="إبطاء"><i class="ph-bold ph-turtle text-xl"></i></button>
+                        <span id="speed-display" class="font-bold text-neon-cyan flex items-center px-2 font-sans tabular-nums">3x</span>
+                        <button onclick="changeSpeed(1)" class="p-2 hover:bg-white/10 rounded-lg text-white" title="تسريع"><i class="ph-bold ph-rabbit text-xl"></i></button>
+                        <div class="w-px h-8 bg-white/20 mx-1"></div>
+                        <button onclick="toggleTeleprompter()" id="btn-prompter-play" class="px-6 py-2 bg-neon-cyan hover:bg-cyan-400 text-deep-base font-bold rounded-lg flex items-center gap-2 transition-all">
+                            <i class="ph-fill ph-play"></i> تشغيل
+                        </button>
+                        <button onclick="resetTeleprompter()" class="p-2 hover:bg-white/10 rounded-lg text-rose-400" title="إعادة"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
+                    </div>
+                </div>
+
+                <!-- Prompter Screen -->
+                <div class="relative bg-black rounded-3xl h-[400px] border-4 border-deep-border shadow-[inset_0_0_50px_rgba(0,0,0,1)] overflow-hidden" id="teleprompter-container">
+                    <!-- Target Line -->
+                    <div class="absolute top-1/2 left-0 w-full h-[2px] bg-neon-magenta/50 shadow-[0_0_10px_#ff0844] z-20 pointer-events-none transform -translate-y-1/2 flex items-center">
+                        <div class="w-4 h-4 rounded-full bg-neon-magenta -ml-2"></div>
+                        <div class="w-4 h-4 rounded-full bg-neon-magenta absolute right-0 -mr-2"></div>
+                    </div>
+                    
+                    <div id="teleprompter-text" class="absolute top-[60%] w-full px-8 md:px-20 text-center text-4xl leading-[2.5] font-arabicHeading text-white font-bold transition-transform duration-75" style="transform: translateY(0px);">
+                        الحمد لله رب العالمين،<br>
+                        القائل في كتابه الكريم:<br>
+                        (يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ حَقَّ تُقَاتِهِ).<br><br>
+                        نحمده سبحانه وتعالى ونشكره،<br>
+                        ونعوذ به من شرور أنفسنا<br>
+                        ومن سيئات أعمالنا.<br><br>
+                        أيها المسلمون،<br>
+                        إن الأمانة التي تحملناها عظيمة،<br>
+                        والكلمة التي ننطق بها مسؤولية.<br><br>
+                        فلنحرص على بناء مجتمعنا بالكلمة الطيبة،<br>
+                        والنصيحة الصادقة،<br>
+                        أقول قولي هذا، وأستغفر الله لي ولكم.<br>
+                        [نهاية النص]
+                    </div>
+                </div>
+            </div>
+
+            <!-- APP 2: Live Audio Analyzer -->
+            <div class="glass-panel p-6 md:p-10 mb-10 relative overflow-hidden">
+                <div class="absolute -top-40 -right-40 w-96 h-96 bg-neon-magenta/20 rounded-full blur-[100px] pointer-events-none"></div>
+                
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 relative z-10 border-b border-white/10 pb-6">
+                    <div class="text-right md:text-right w-full">
+                        <h3 class="text-3xl font-black text-white font-arabicHeading flex items-center gap-3">
+                            <i class="ph-fill ph-waveform text-neon-magenta"></i> مقياس طبقات الصوت الحي
+                        </h3>
+                        <p class="text-gray-400 mt-2">اختبر قوة صوتك وتلوينك الصوتي بشكل مرئي ومباشر (يتطلب السماح بالمايكروفون).</p>
+                    </div>
+                    <button onclick="toggleMicrophone()" id="btn-mic" class="mt-4 md:mt-0 whitespace-nowrap px-8 py-3 bg-gradient-to-r from-neon-magenta to-rose-600 hover:from-rose-500 hover:to-rose-700 text-white font-bold rounded-xl flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(255,8,68,0.4)]">
+                        <i class="ph-bold ph-microphone text-2xl"></i> تفعيل المايكروفون
+                    </button>
+                </div>
+
+                <div class="bg-deep-base rounded-3xl p-6 border border-white/5 relative h-[250px] flex items-center justify-center">
+                    <p id="mic-status" class="absolute text-gray-500 font-arabicText z-0">اضغط على زر التفعيل لبدء تحليل الصوت...</p>
+                    <!-- Audio Canvas -->
+                    <canvas id="audio-visualizer" class="w-full h-full relative z-10"></canvas>
+                </div>
+            </div>
+
+            <!-- APP 3: Dynamic Topic Generator -->
+            <div class="glass-panel p-6 md:p-10 mb-10">
+                <div class="text-center mb-10">
+                    <h3 class="text-3xl font-black text-white font-arabicHeading inline-flex items-center gap-3 justify-center">
+                        <i class="ph-fill ph-arrows-clockwise text-neon-gold"></i> عجلة الارتجال الديناميكية
+                    </h3>
+                    <p class="text-gray-400 mt-2">محاكي لسحب المواضيع العشوائية وتحدي الخطابة الارتجالية تحت الضغط.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                    
+                    <!-- Slot Machine Side -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-full bg-deep-base border border-neon-gold/30 rounded-3xl p-8 relative overflow-hidden h-[200px] flex items-center justify-center shadow-[inset_0_0_30px_rgba(251,191,36,0.1)]">
+                            <div class="absolute inset-0 bg-gradient-to-b from-deep-base via-transparent to-deep-base z-10 pointer-events-none"></div>
+                            
+                            <div id="slot-text-container" class="w-full text-center font-black font-arabicHeading text-2xl md:text-3xl text-neon-gold transition-all duration-75 px-4 leading-relaxed">
+                                اضغط على الزر لسحب موضوع...
+                            </div>
+                        </div>
+
+                        <button onclick="spinTopic()" id="btn-spin" class="mt-8 px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-2xl font-arabicHeading rounded-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(245,158,11,0.5)]">
+                            <i class="ph-bold ph-ticket"></i> اسحب الموضوع الآن
+                        </button>
+                    </div>
+
+                    <!-- Circular Timer Side -->
+                    <div class="flex flex-col items-center justify-center bg-deep-panel/50 p-8 rounded-3xl border border-white/5">
+                        
+                        <div class="relative w-48 h-48 mb-6 flex items-center justify-center">
+                            <!-- SVG Ring -->
+                            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" stroke-width="6"></circle>
+                                <circle id="timer-ring" class="progress-ring__circle" cx="50" cy="50" r="45" fill="none" stroke="#00f2fe" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round"></circle>
+                            </svg>
+                            <!-- Time Text -->
+                            <div id="timer-text" class="text-5xl font-sans font-black text-white tabular-nums z-10 drop-shadow-[0_0_10px_rgba(0,242,254,0.5)]">
+                                02:00
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="startTimer()" id="btn-timer-start" class="px-6 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white rounded-lg font-bold transition-all"><i class="ph-fill ph-play"></i> ابدأ</button>
+                            <button onclick="pauseTimer()" class="px-6 py-2 bg-white/5 text-gray-300 border border-white/20 hover:bg-white/20 rounded-lg font-bold transition-all"><i class="ph-fill ph-pause"></i> توقف</button>
+                            <button onclick="resetTimer()" class="px-6 py-2 bg-rose-500/20 text-rose-400 border border-rose-500/50 hover:bg-rose-500 hover:text-white rounded-lg font-bold transition-all"><i class="ph-fill ph-arrow-counter-clockwise"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // 0. Particle Canvas Background (Vanilla JS)
+        // ==========================================
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles;
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            
+            const numParticles = Math.min(Math.floor(window.innerWidth / 15), 100);
+            
+            for (let i = 0; i < numParticles; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(0, 242, 254, 0.5)';
+            ctx.lineWidth = 0.5;
+
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Bounce off edges
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw connecting lines
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let dx = p.x - p2.x;
+                    let dy = p.y - p2.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        ctx.strokeStyle = `rgba(0, 242, 254, ${0.2 - dist/750})`;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(drawParticles);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawParticles();
+
+        // ==========================================
+        // 1. Tab & Accordion Navigation
+        // ==========================================
+        function switchTab(tabId) {
+            const secTeori = document.getElementById('sec-teori');
+            const secPraktikal = document.getElementById('sec-praktikal');
+            const btnTeori = document.getElementById('btn-teori');
+            const btnPraktikal = document.getElementById('btn-praktikal');
+
+            // Reset UI
+            btnTeori.classList.remove('active', 'text-white');
+            btnTeori.classList.add('text-gray-300');
+            btnPraktikal.classList.remove('active', 'text-white');
+            btnPraktikal.classList.add('text-gray-300');
+            
+            secTeori.classList.add('hidden');
+            secPraktikal.classList.add('hidden');
+            secTeori.classList.remove('animate-slide-up');
+            secPraktikal.classList.remove('animate-slide-up');
+
+            if(tabId === 'teori') {
+                secTeori.classList.remove('hidden');
+                setTimeout(() => secTeori.classList.add('animate-slide-up'), 10);
+                btnTeori.classList.add('active', 'text-white');
+                btnTeori.classList.remove('text-gray-300');
+            } else {
+                secPraktikal.classList.remove('hidden');
+                setTimeout(() => secPraktikal.classList.add('animate-slide-up'), 10);
+                btnPraktikal.classList.add('active', 'text-white');
+                btnPraktikal.classList.remove('text-gray-300');
+            }
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.classList.remove('open');
+            } else {
+                // Auto close others
+                document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('open'));
+                document.querySelectorAll('.accordion-icon').forEach(el => el.classList.remove('open'));
+                
+                content.classList.add('open');
+                icon.classList.add('open');
+            }
+        }
+
+        // ==========================================
+        // 2. Smart Teleprompter Logic
+        // ==========================================
+        let promptY = 0;
+        let promptSpeed = 0.5; // pixels per frame
+        let promptSpeedLevel = 3;
+        let isPrompterPlaying = false;
+        let promptFontSize = 36; // px (text-4xl approx)
+        let prompterAnimationId;
+
+        const prompterText = document.getElementById('teleprompter-text');
+        const speedDisplay = document.getElementById('speed-display');
+        const btnPrompterPlay = document.getElementById('btn-prompter-play');
+
+        function changeFontSize(direction) {
+            promptFontSize += (direction * 4);
+            if(promptFontSize < 20) promptFontSize = 20;
+            if(promptFontSize > 72) promptFontSize = 72;
+            prompterText.style.fontSize = `${promptFontSize}px`;
+        }
+
+        function changeSpeed(direction) {
+            promptSpeedLevel += direction;
+            if(promptSpeedLevel < 1) promptSpeedLevel = 1;
+            if(promptSpeedLevel > 9) promptSpeedLevel = 9;
+            
+            speedDisplay.innerText = `${promptSpeedLevel}x`;
+            promptSpeed = promptSpeedLevel * 0.15; // Calculate actual speed
+        }
+
+        function scrollPrompter() {
+            if (isPrompterPlaying) {
+                promptY -= promptSpeed;
+                prompterText.style.transform = `translateY(${promptY}px)`;
+                prompterAnimationId = requestAnimationFrame(scrollPrompter);
+            }
+        }
+
+        function toggleTeleprompter() {
+            isPrompterPlaying = !isPrompterPlaying;
+            if (isPrompterPlaying) {
+                btnPrompterPlay.innerHTML = `<i class="ph-fill ph-pause"></i> إيقاف`;
+                btnPrompterPlay.classList.replace('bg-neon-cyan', 'bg-rose-500');
+                btnPrompterPlay.classList.replace('hover:bg-cyan-400', 'hover:bg-rose-400');
+                btnPrompterPlay.classList.replace('text-deep-base', 'text-white');
+                scrollPrompter();
+            } else {
+                btnPrompterPlay.innerHTML = `<i class="ph-fill ph-play"></i> تشغيل`;
+                btnPrompterPlay.classList.replace('bg-rose-500', 'bg-neon-cyan');
+                btnPrompterPlay.classList.replace('hover:bg-rose-400', 'hover:bg-cyan-400');
+                btnPrompterPlay.classList.replace('text-white', 'text-deep-base');
+                cancelAnimationFrame(prompterAnimationId);
+            }
+        }
+
+        function resetTeleprompter() {
+            isPrompterPlaying = false;
+            cancelAnimationFrame(prompterAnimationId);
+            promptY = 0;
+            prompterText.style.transform = `translateY(0px)`;
+            btnPrompterPlay.innerHTML = `<i class="ph-fill ph-play"></i> تشغيل`;
+            btnPrompterPlay.classList.replace('bg-rose-500', 'bg-neon-cyan');
+            btnPrompterPlay.classList.replace('hover:bg-rose-400', 'hover:bg-cyan-400');
+            btnPrompterPlay.classList.replace('text-white', 'text-deep-base');
+        }
+
+        // ==========================================
+        // 3. Live Audio Visualizer (Web Audio API)
+        // ==========================================
+        let audioContext;
+        let analyser;
+        let microphone;
+        let javascriptNode;
+        let isMicActive = false;
+        const audioCanvas = document.getElementById('audio-visualizer');
+        const audioCtx = audioCanvas.getContext('2d');
+        let audioAnimId;
+
+        function toggleMicrophone() {
+            if (isMicActive) {
+                stopMicrophone();
+            } else {
+                startMicrophone();
+            }
+        }
+
+        async function startMicrophone() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                document.getElementById('mic-status').style.display = 'none';
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                analyser.smoothingTimeConstant = 0.8;
+                analyser.fftSize = 256;
+                microphone.connect(analyser);
+                
+                isMicActive = true;
+                const btn = document.getElementById('btn-mic');
+                btn.innerHTML = `<i class="ph-bold ph-stop"></i> إيقاف المايكروفون`;
+                btn.classList.replace('from-neon-magenta', 'from-gray-600');
+                btn.classList.replace('to-rose-600', 'to-gray-800');
+                btn.style.boxShadow = 'none';
+                
+                drawAudioVisualizer();
+            } catch (err) {
+                alert("يرجى السماح بالوصول إلى المايكروفون لاستخدام هذه الميزة.");
+                console.error(err);
+            }
+        }
+
+        function stopMicrophone() {
+            if(audioContext) {
+                audioContext.close();
+            }
+            isMicActive = false;
+            cancelAnimationFrame(audioAnimId);
+            audioCtx.clearRect(0, 0, audioCanvas.width, audioCanvas.height);
+            document.getElementById('mic-status').style.display = 'block';
+            
+            const btn = document.getElementById('btn-mic');
+            btn.innerHTML = `<i class="ph-bold ph-microphone text-2xl"></i> تفعيل المايكروفون`;
+            btn.classList.replace('from-gray-600', 'from-neon-magenta');
+            btn.classList.replace('to-gray-800', 'to-rose-600');
+            btn.style.boxShadow = '0 0 20px rgba(255,8,68,0.4)';
+        }
+
+        function drawAudioVisualizer() {
+            if(!isMicActive) return;
+            
+            audioCanvas.width = audioCanvas.offsetWidth;
+            audioCanvas.height = audioCanvas.offsetHeight;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            audioCtx.clearRect(0, 0, audioCanvas.width, audioCanvas.height);
+            
+            const barWidth = (audioCanvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+            
+            for(let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i];
+                
+                // Neon Gradient for bars
+                const grad = audioCtx.createLinearGradient(0, audioCanvas.height, 0, audioCanvas.height - barHeight);
+                grad.addColorStop(0, '#a855f7'); // purple
+                grad.addColorStop(0.5, '#ff0844'); // magenta
+                grad.addColorStop(1, '#f59e0b'); // gold
+                
+                audioCtx.fillStyle = grad;
+                // Add shadow for glow
+                audioCtx.shadowBlur = 10;
+                audioCtx.shadowColor = '#ff0844';
+                
+                audioCtx.fillRect(x, audioCanvas.height - (barHeight/1.5), barWidth, barHeight/1.5);
+                
+                x += barWidth + 2;
+            }
+            
+            audioAnimId = requestAnimationFrame(drawAudioVisualizer);
+        }
+
+        // ==========================================
+        // 4. Dynamic Topic Generator (Slot Machine)
+        // ==========================================
+        const topics = [
+            "أهمية بر الوالدين في زمن الانشغال المادي.",
+            "الاستعداد الروحي لاستقبال شهر رمضان المبارك.",
+            "التسامح والعفو وأثرهما في وحدة المجتمع.",
+            "أمانة الكلمة في عصر وسائل التواصل الاجتماعي.",
+            "شباب الأمة: بين التحديات المعاصرة والتمسك بالدين.",
+            "مفهوم التقوى وكيف نطبقه في حياتنا اليومية.",
+            "فضل الصدقة وتأثيرها على الفرد والمجتمع."
+        ];
+
+        let slotInterval;
+        const slotText = document.getElementById('slot-text-container');
+        const btnSpin = document.getElementById('btn-spin');
+
+        function spinTopic() {
+            if (btnSpin.disabled) return;
+            
+            btnSpin.disabled = true;
+            btnSpin.classList.add('opacity-50', 'cursor-not-allowed');
+            slotText.classList.add('slot-machine-blur', 'text-white');
+            slotText.classList.remove('text-neon-gold');
+            
+            let counter = 0;
+            const spins = 20; // Number of fast switches
+            
+            // Play rapid changing effect
+            slotInterval = setInterval(() => {
+                const randomIdx = Math.floor(Math.random() * topics.length);
+                slotText.innerText = topics[randomIdx];
+                counter++;
+                
+                if (counter > spins) {
+                    clearInterval(slotInterval);
+                    // Stop on final topic
+                    const finalTopic = topics[Math.floor(Math.random() * topics.length)];
+                    slotText.innerText = finalTopic;
+                    
+                    // Add pop and glow effect
+                    slotText.classList.remove('slot-machine-blur', 'text-white');
+                    slotText.classList.add('text-neon-gold');
+                    slotText.style.transform = 'scale(1.1)';
+                    setTimeout(() => { slotText.style.transform = 'scale(1)'; }, 300);
+                    
+                    btnSpin.disabled = false;
+                    btnSpin.classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    // Auto start timer
+                    resetTimer();
+                    startTimer();
+                }
+            }, 100);
+        }
+
+        // ==========================================
+        // 5. Circular Countdown Timer
+        // ==========================================
+        const TIME_LIMIT = 120; // 2 minutes
+        let timePassed = 0;
+        let timeLeft = TIME_LIMIT;
+        let timerInterval = null;
+        let timerIsRunning = false;
+        
+        const circle = document.getElementById('timer-ring');
+        const circumference = 45 * 2 * Math.PI; // r=45
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = 0;
+        
+        const timerTextDisplay = document.getElementById('timer-text');
+        const btnTimerStart = document.getElementById('btn-timer-start');
+
+        function formatTime(time) {
+            const minutes = Math.floor(time / 60);
+            let seconds = time % 60;
+            if (seconds < 10) { seconds = `0${seconds}`; }
+            return `${0}${minutes}:${seconds}`;
+        }
+
+        function setCircleDasharray() {
+            const circleDashoffset = circumference - (timePassed / TIME_LIMIT) * circumference;
+            circle.style.strokeDashoffset = circleDashoffset;
+            
+            // Color warning
+            if(timeLeft <= 30) {
+                circle.style.stroke = '#ff0844'; // Red warning
+                timerTextDisplay.classList.add('text-neon-magenta');
+                timerTextDisplay.classList.remove('text-white');
+            } else {
+                circle.style.stroke = '#00f2fe'; // Cyan normal
+                timerTextDisplay.classList.remove('text-neon-magenta');
+                timerTextDisplay.classList.add('text-white');
+            }
+        }
+
+        function startTimer() {
+            if (timerIsRunning || timeLeft <= 0) return;
+            timerIsRunning = true;
+            btnTimerStart.disabled = true;
+            btnTimerStart.classList.add('opacity-50');
+            
+            timerInterval = setInterval(() => {
+                timePassed += 1;
+                timeLeft = TIME_LIMIT - timePassed;
+                timerTextDisplay.innerText = formatTime(timeLeft);
+                setCircleDasharray();
+                
+                if (timeLeft === 0) {
+                    clearInterval(timerInterval);
+                    timerIsRunning = false;
+                    timerTextDisplay.innerText = "انتهى!";
+                    timerTextDisplay.classList.add('text-rose-500');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            timerIsRunning = false;
+            btnTimerStart.disabled = false;
+            btnTimerStart.classList.remove('opacity-50');
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerIsRunning = false;
+            timePassed = 0;
+            timeLeft = TIME_LIMIT;
+            timerTextDisplay.innerText = formatTime(timeLeft);
+            timerTextDisplay.classList.remove('text-rose-500', 'text-neon-magenta');
+            timerTextDisplay.classList.add('text-white');
+            circle.style.stroke = '#00f2fe';
+            circle.style.strokeDashoffset = 0;
+            
+            btnTimerStart.disabled = false;
+            btnTimerStart.classList.remove('opacity-50');
+        }
+
+        // Initialize first tab open
+        setTimeout(() => { toggleAccordion('acc1'); }, 800);
+    </script>
+</body>
+</html>
